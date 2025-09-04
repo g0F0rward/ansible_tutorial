@@ -7,13 +7,46 @@
     - name: Update repository index
       apt:
         update_cache: yes
+      when: ansible_distribution in ["Ubuntu","Debian"]
 
     - name: install apache2 package
       apt:
         name: apache2
         state: latest
+      when: ansible_distribution == "Ubuntu"
 
     - name: add php support for apache2
       apt:
         name: libapache2-mod-php
         state: latest
+      when: ansible_distribution == "Ubuntu"
+
+
+    - name: update repository index
+      dnf:
+        update_cache: yes
+      when: ansible_distribution in ["RedHat"]
+
+    - name: install apache webserver
+      dnf:
+        name: httpd
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: add php package support for httpd
+      dnf: 
+        name: libapache2-mod-php
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: open firewall for httpd
+      ufw:
+        rule: allow
+        name: httpd
+      when: ansible_distribution == "RedHat"
+
+    - name: start httpd services on RedHat
+      ansible.builtin.service:
+        name: httpd
+        state: started
+      become: true
