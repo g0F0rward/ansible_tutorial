@@ -1,0 +1,95 @@
+---
+
+- hosts:  all
+  become: true
+  pre_tasks:
+    - name: Install  updates (RedHat)
+      tags: always
+      dnf:
+        update_only: yes
+        update_cache: yes
+      when: ansible_distribution == "RedHat"
+
+    - name: Install updates (Ubuntu)
+      tags: always
+      apt:
+        # upgrade: dist
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+- hosts: web_servers
+  become: true
+  tasks:
+    - name: install apache2 package
+      tags: apache, apache2, Ubuntu
+      apt:
+        name: 
+          - apache2
+        state: latest 
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: install apache and php for RedHat
+      tags: apache, httpd, RedHat
+      dnf:
+        name: 
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution in ["RedHat"]
+
+    - name: copy default html
+      tags: apache,apache2,Ubuntu
+      copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
+
+- hosts: db_servers
+  become: true
+  tasks:
+    - name: install mariadb package (RedHat)
+      tags: RedHat,db,mariadb
+      dnf:
+        name: mariadb
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: install mariadb package (Ubuntu)
+      tags: Ubuntu,db,mariadb
+      package:
+         name: mariadb-server
+         state: latest
+      when: ansible_distribution == "Ubuntu"
+        
+# Configure services
+- hosts: web_servers
+  become: true
+  tasks:  
+    - name: open firewall for httpd
+      tags: samba,fileserver
+      ansible.posix.firewalld:
+        port: 80/tcp
+        zone: public
+        permanent: "yes"
+        state: enabled
+        immediate: yes
+      when: ansible_distribution == "RedHat"
+
+    - name: start httpd services on RedHat
+      ansible.builtin.service:
+        name: httpd
+        state: started
+      become: true
+      when: ansible_distribution == "RedHat"
+
+# Install Samba 
+- hosts: file_servers
+  become: true
+  tasks:
+    - name: install samba fileserver
+      package:
+        name: samba
+        state: latest

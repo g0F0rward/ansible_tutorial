@@ -4,22 +4,12 @@
   become: true
   tasks:
     - name: install apache2 package
-      apt:
+      package:
         name: 
-          - apache2
-          - libapache2-mod-php
-        state: latest 
-        update_cache: yes
-      when: ansible_distribution == "Ubuntu"
-
-    - name: install apache and php for RedHat
-      dnf:
-        name: 
-          - httpd
-          - php
+          - "{{ apache_package }}"
+          - "{{ php_package }}"
         state: latest
-        # update_cache: yes
-      when: ansible_distibution == "RedHat"
+        update_cache: yes
 
     - name: open firewall for httpd
       ansible.posix.firewalld:
