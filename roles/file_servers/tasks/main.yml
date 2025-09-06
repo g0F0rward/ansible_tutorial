@@ -1,0 +1,4 @@
+- name: install samba fileserver
+  package:
+    name: samba
+    state: latest

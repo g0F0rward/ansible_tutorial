@@ -1,0 +1,13 @@
+- name: install mariadb package (RedHat)
+  tags: RedHat,db,mariadb
+  dnf:
+    name: mariadb
+    state: latest
+  when: ansible_distribution == "RedHat"
+
+- name: install mariadb package (Ubuntu)
+  tags: Ubuntu,db,mariadb
+  package:
+    name: mariadb-server
+    state: latest
+  when: ansible_distribution == "Ubuntu"

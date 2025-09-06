@@ -1,0 +1,49 @@
+- name: install apache2 package
+  tags: apache, apache2, Ubuntu
+  apt:
+    name:
+      - apache2
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+- name: install apache and php for RedHat
+  tags: apache, httpd, RedHat
+  dnf:
+    name:
+      - httpd
+      - php
+    state: latest
+  when: ansible_distribution in ["RedHat"]
+
+- name: change email address in admin file
+  tags: apache,RedHat
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regex: '^ServerAdmin'
+    line: ServerAdmin ServerAdmins@bennettwi.com
+  when: ansible_distribution in "RedHat"
+  register: pizzaPie
+
+- name: restart httpd when pizzaPie is changed (RedHat)
+  tags: apache,RedHat
+  service:
+    name: httpd
+    state: restarted
+  when: pizzaPie.changed
+
+- name: copy default html
+  tags: apache,apache2,Ubuntu
+  copy:
+    src: default_site.html
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: 0644
+
+- name: start httpd (RedHat)
+  tags: apache,httpd,RedHat
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+  when: ansible_distribution == "RedHat"

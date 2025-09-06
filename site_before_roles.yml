@@ -7,27 +7,20 @@
       tags: always
       dnf:
         update_cache: yes
+      changed_when: false
       when: ansible_distribution == "RedHat"
 
     - name: Install updates (Ubuntu)
       tags: always
       apt:
         update_cache: yes
+      changed_when: false
       when: ansible_distribution == "Ubuntu"
 
     - name: install unzip
       package: 
         name: unzip
 
-- hosts: all
-  become: true
-  tags: all
-  tasks:
-    - name: create simone user
-      tags: all,always
-      user:
-        name: simone
-        groups: root    
 
 - hosts: web_servers
   become: true
@@ -38,7 +31,6 @@
         name: 
           - apache2
         state: latest 
-        update_cache: yes
       when: ansible_distribution == "Ubuntu"
 
     - name: install apache and php for RedHat
@@ -132,4 +124,4 @@
         mode: 0755
         owner: administrator
         group: administrator
-        # when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Ubuntu"
