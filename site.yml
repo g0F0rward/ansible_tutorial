@@ -6,16 +6,21 @@
     - name: Install  updates (RedHat)
       tags: always
       dnf:
-        update_only: yes
         update_cache: yes
+      changed_when: false
       when: ansible_distribution == "RedHat"
 
     - name: Install updates (Ubuntu)
       tags: always
       apt:
-        # upgrade: dist
         update_cache: yes
+      changed_when: false
       when: ansible_distribution == "Ubuntu"
+
+    - name: install unzip
+      package: 
+        name: unzip
+
 
 - hosts: web_servers
   become: true
@@ -26,7 +31,6 @@
         name: 
           - apache2
         state: latest 
-        update_cache: yes
       when: ansible_distribution == "Ubuntu"
 
     - name: install apache and php for RedHat
@@ -38,6 +42,22 @@
         state: latest
       when: ansible_distribution in ["RedHat"]
 
+    - name: change email address in admin file
+      tags: apache,RedHat
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regex: '^ServerAdmin'
+        line: ServerAdmin ServerAdmins@bennettwi.com
+      when: ansible_distribution in "RedHat"
+      register: pizzaPie
+
+    - name: restart httpd when pizzaPie is changed (RedHat)
+      tags: apache,RedHat
+      service:
+        name: httpd
+        state: restarted
+      when: pizzaPie.changed
+
     - name: copy default html
       tags: apache,apache2,Ubuntu
       copy:
@@ -46,6 +66,14 @@
         owner: root
         group: root
         mode: 0644
+
+    - name: start httpd (RedHat)
+      tags: apache,httpd,RedHat
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_distribution == "RedHat"
 
 - hosts: db_servers
   become: true
@@ -78,14 +106,6 @@
         immediate: yes
       when: ansible_distribution == "RedHat"
 
-    - name: start httpd services on RedHat
-      ansible.builtin.service:
-        name: httpd
-        state: started
-      become: true
-      when: ansible_distribution == "RedHat"
-
-# Install Samba 
 - hosts: file_servers
   become: true
   tasks:
@@ -93,3 +113,15 @@
       package:
         name: samba
         state: latest
+
+- hosts: web_servers
+  become: true
+  tasks:
+    - name: install terraform
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+        dest: /usr/local/bin
+        mode: 0755
+        owner: administrator
+        group: administrator
+      when: ansible_distribution == "Ubuntu"
