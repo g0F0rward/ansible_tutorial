@@ -9,7 +9,7 @@
 - name: start and enable apache/httpd service
   tags: apache,httpd
   service:
-    name: "{{ apache_service }}"
+    - "{{ apache_service }}"
     state: started
     enabled: yes
 
@@ -18,9 +18,16 @@
   lineinfile:
     path: /etc/httpd/conf/httpd.conf
     regex: '^ServerAdmin'
-    line: bennettwi.com bennettwi.net
+    line: ServerAdmin ServerAdmins@bennettwi.com
   when: ansible_distribution in "RedHat"
-  notify: restart_apache
+  register: apache
+
+- name: restart httpd when apache file is changed (RedHat)
+  tags: apache,RedHat
+  service:
+    name: "{{ apache_service }}"
+    state: restarted
+  when: apache.changed
 
 - name: copy default html
   tags: apache,apache2,Ubuntu

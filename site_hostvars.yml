@@ -1,0 +1,38 @@
+- hosts: all
+  become: true
+  gather_facts: yes
+  pre_tasks:
+
+    - name: Update Repository index (RedHat)
+      tags:  RedHat,always
+      dnf:
+        update_cache: yes
+      changed_when: false
+      when: ansible_distribution ==  "RedHat"
+
+    - name: Update Repository index (Ubuntu)
+      tags: Ubuntu,always
+      package:
+        update_cache: yes
+      changed_when: false
+      when: ansible_distribution == "Ubuntu"
+
+- hosts: workstations
+  become: true
+  roles:
+    - workstations
+
+- hosts: web_servers
+  become: true
+  roles:
+    - web_servers
+
+- hosts: file_servers
+  become: true
+  roles:
+    - file_servers
+
+- hosts: db_servers
+  become: yes
+  roles:
+    - db_servers
