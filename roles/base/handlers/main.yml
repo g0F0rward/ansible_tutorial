@@ -1,7 +1,8 @@
 - name: restart_sshd
   service:
     name: sshd
-    state: restarted- name: restart_sshd
-    service:
-      name: sshd
-      state: restarted
+    state: restarted
+- name: restart_sshd
+  service:
+    name: sshd
+    state: restarted

@@ -1,2 +1,2 @@
 nfs
-ubuntu-iscsi
+ubuntu-iscsi ansible_connection=local
